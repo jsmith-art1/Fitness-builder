@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Conditioning Generator</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+  </head>
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
+  <body>
+    <main class="app-shell">
+      <section class="control-panel" aria-label="Conditioning controls">
+        <div class="brand-row">
+          <div>
+            <p class="eyebrow">Fitness Builder</p>
+            <h1>Conditioning Generator</h1>
+          </div>
+          <button class="quiet-button" id="surpriseButton" type="button">Random</button>
+        </div>
+
+        <div class="session-visual" aria-hidden="true">
+          <span class="lane lane-one"></span>
+          <span class="lane lane-two"></span>
+          <span class="lane lane-three"></span>
+          <span class="lane lane-four"></span>
+        </div>
+
+        <div class="field-group">
+          <div class="section-label">Day type</div>
+          <div class="segmented-grid" id="dayButtons" role="radiogroup" aria-label="Day type"></div>
+        </div>
+
+        <div class="field-group">
+          <div class="section-label">Option</div>
+          <div class="option-row" id="optionButtons" role="radiogroup" aria-label="Training option"></div>
+        </div>
+
+        <button class="primary-button" id="generateButton" type="button">
+          Generate session
+        </button>
+      </section>
+
+      <section class="output-panel" aria-live="polite">
+        <div class="output-header">
+          <div>
+            <p class="eyebrow" id="sessionType">Aerobic Day / Option A</p>
+            <h2 id="sessionTitle">Steady Capacity Builder</h2>
+          </div>
+          <div class="action-row">
+            <button class="icon-button" id="copyButton" type="button" aria-label="Copy session" title="Copy session">
+              <span aria-hidden="true">Copy</span>
+            </button>
+            <button class="icon-button" id="saveButton" type="button" aria-label="Save session" title="Save session">
+              <span aria-hidden="true">Save</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-grid" id="summaryGrid"></div>
+
+        <div class="workout-blocks" id="workoutBlocks"></div>
+
+        <div class="coach-note" id="coachNote"></div>
+
+        <div class="copy-panel" id="copyPanel" hidden>
+          <textarea id="copyTextArea" readonly aria-label="Session text"></textarea>
+        </div>
+      </section>
+
+      <aside class="saved-panel" aria-label="Saved sessions">
+        <div class="saved-header">
+          <div>
+            <p class="eyebrow">Saved</p>
+            <h2>Recent sessions</h2>
+          </div>
+          <button class="quiet-button" id="clearSavedButton" type="button">Clear</button>
+        </div>
+        <div class="saved-list" id="savedList"></div>
+      </aside>
+    </main>
+
+    <script src="app.js?v=3"></script>
+  </body>
+</html>
