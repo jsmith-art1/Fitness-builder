@@ -181,13 +181,90 @@ const dayTypes = {
   }
 };
 
+const profiles = {
+  adult50: {
+    label: "Me",
+    hint: "50",
+    summary: "Me, 50",
+    blockTitle: "Adult target",
+    volume: {
+      aerobic: 0.9,
+      sprint: 0.75,
+      shuttle: 0.8,
+      bike: 0.9
+    },
+    intensity: {
+      aerobic: "RPE 5-6",
+      sprint: "RPE 7-8",
+      shuttle: "RPE 6-8",
+      bike: "RPE 6-8"
+    },
+    cues: {
+      aerobic: ["Use the lower end if sleep, joints, or stress are not cooperating.", "Finish with one more round clearly available."],
+      sprint: ["Add extra warmup and cap the day when speed or mechanics fade.", "Keep 1-2 fast reps in reserve."],
+      shuttle: ["Prioritize clean deceleration over chasing every rep.", "Take the longer rest option if turns get sloppy."],
+      bike: ["Build into the first two reps instead of attacking from the start.", "Keep breathing controlled enough to repeat the output."]
+    }
+  },
+  teen15: {
+    label: "Daughter",
+    hint: "15",
+    summary: "Daughter, 15",
+    blockTitle: "Teen target",
+    volume: {
+      aerobic: 0.85,
+      sprint: 0.85,
+      shuttle: 0.9,
+      bike: 0.85
+    },
+    intensity: {
+      aerobic: "RPE 5-7",
+      sprint: "RPE 8-9",
+      shuttle: "RPE 7-8",
+      bike: "RPE 6-8"
+    },
+    cues: {
+      aerobic: ["Keep the work playful and smooth, not grindy.", "Technique and consistency beat squeezing out extra minutes."],
+      sprint: ["Move fast only while posture and foot strike stay clean.", "Use full recoveries; speed practice is not a conditioning slog."],
+      shuttle: ["Make every cut controlled before adding more pace.", "Stop the set if knees cave or plants get loud."],
+      bike: ["Let cadence stay smooth before adding resistance.", "No all-out finish unless the whole session stayed crisp."]
+    }
+  },
+  together: {
+    label: "Together",
+    hint: "Split caps",
+    summary: "Together",
+    blockTitle: "Shared target",
+    volume: {
+      aerobic: 0.8,
+      sprint: 0.75,
+      shuttle: 0.8,
+      bike: 0.85
+    },
+    intensity: {
+      aerobic: "Dad RPE 5-6 / Daughter RPE 5-7",
+      sprint: "Dad RPE 7-8 / Daughter RPE 8-9",
+      shuttle: "Dad RPE 6-8 / Daughter RPE 7-8",
+      bike: "Dad RPE 6-8 / Daughter RPE 6-8"
+    },
+    cues: {
+      aerobic: ["Run the same clock, but each person owns their pace.", "Dad uses the lower cap; daughter keeps it smooth and relaxed."],
+      sprint: ["Use the same start line with separate stop points if needed.", "Dad stops on speed fade; daughter stops on technique fade."],
+      shuttle: ["Same cones, separate standards: clean turns first for both.", "Take the longer rest whenever either person loses control."],
+      bike: ["Share the interval timer, not the watt target.", "Dad holds repeatable output; daughter keeps cadence crisp."]
+    }
+  }
+};
+
 const state = {
   day: "aerobic",
   option: "A",
+  profile: "together",
   currentSession: null,
   saved: JSON.parse(localStorage.getItem("conditioningSaved") || "[]")
 };
 
+const profileButtons = document.querySelector("#profileButtons");
 const dayButtons = document.querySelector("#dayButtons");
 const optionButtons = document.querySelector("#optionButtons");
 const summaryGrid = document.querySelector("#summaryGrid");
@@ -208,26 +285,67 @@ function pick(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function createSession(dayKey = state.day, optionKey = state.option) {
+function scaledInteger(value, factor, minimum = 1) {
+  return Math.max(minimum, Math.round(value * factor));
+}
+
+function adjustedVariables(dayKey, optionKey, variables, profile) {
+  const factor = profile.volume[dayKey];
+  const adjusted = {
+    ...variables,
+    duration: scaledInteger(variables.duration, factor, 18),
+    rounds: scaledInteger(variables.rounds, factor, dayKey === "aerobic" ? 2 : 3)
+  };
+
+  if (dayKey === "aerobic") {
+    adjusted.work = scaledInteger(variables.work, factor, 2);
+  }
+
+  if (dayKey === "bike" && optionKey !== "B") {
+    adjusted.work = scaledInteger(variables.work, factor, 2);
+  }
+
+  if (dayKey === "shuttle" && optionKey === "C") {
+    adjusted.work = scaledInteger(variables.work, factor, 10);
+  }
+
+  return adjusted;
+}
+
+function profileItems(profile, dayKey) {
+  const volumePercent = Math.round(profile.volume[dayKey] * 100);
+  return [`Volume target: about ${volumePercent}% of the base session`, ...profile.cues[dayKey]];
+}
+
+function createSession(dayKey = state.day, optionKey = state.option, profileKey = state.profile) {
   const day = dayTypes[dayKey];
   const option = day.options[optionKey];
-  const variables = {
+  const profile = profiles[profileKey];
+  const baseVariables = {
     rounds: pick(option.rounds),
     work: pick(option.work),
     rest: pick(option.rest),
     duration: pick(option.duration)
   };
+  const variables = adjustedVariables(dayKey, optionKey, baseVariables, profile);
 
   return {
     id: crypto.randomUUID(),
     dayKey,
     optionKey,
+    profileKey,
+    profileLabel: profile.summary,
     dayLabel: day.label,
     title: option.title,
     intent: option.intent,
-    intensity: option.intensity,
+    intensity: profile.intensity[dayKey] || option.intensity,
     duration: `${variables.duration} min`,
     blocks: [
+      {
+        kicker: "Profile",
+        title: profile.blockTitle,
+        items: profileItems(profile, dayKey)
+      },
       {
         kicker: "Warmup",
         title: "Prepare",
@@ -252,6 +370,17 @@ function createSession(dayKey = state.day, optionKey = state.option) {
       minute: "2-digit"
     })
   };
+}
+
+function renderProfileButtons() {
+  profileButtons.innerHTML = Object.entries(profiles)
+    .map(([key, profile]) => `
+      <button class="profile-button" type="button" role="radio" aria-checked="${state.profile === key}" data-profile="${key}">
+        <strong>${profile.label}</strong>
+        <span>${profile.hint}</span>
+      </button>
+    `)
+    .join("");
 }
 
 function renderDayButtons() {
@@ -281,6 +410,7 @@ function renderOptionButtons() {
 
 function renderSession(session) {
   state.currentSession = session;
+  const profileLabel = session.profileLabel || "Together";
   copyPanel.hidden = true;
   copyTextArea.value = "";
   sessionType.textContent = `${session.dayLabel} / Option ${session.optionKey}`;
@@ -288,6 +418,7 @@ function renderSession(session) {
   coachNote.textContent = session.note;
 
   const summaryItems = [
+    ["Profile", profileLabel],
     ["Duration", session.duration],
     ["Intensity", session.intensity],
     ["Focus", session.intent],
@@ -330,6 +461,7 @@ function renderSaved() {
         <button type="button" data-saved-id="${session.id}">
           <strong>${session.title}</strong>
           <span>${session.dayLabel} / Option ${session.optionKey}</span>
+          <span>${session.profileLabel || "Together"}</span>
           <span>${session.duration} at ${session.intensity}</span>
         </button>
       </article>
@@ -345,9 +477,11 @@ function plainTextSession(session) {
   const blocks = session.blocks
     .map((block) => `${block.kicker}: ${block.items.join("; ")}`)
     .join("\n");
+  const profileLabel = session.profileLabel || "Together";
 
   return `${session.dayLabel} / Option ${session.optionKey}
 ${session.title}
+Profile: ${profileLabel}
 Duration: ${session.duration}
 Intensity: ${session.intensity}
 Focus: ${session.intent}
@@ -376,6 +510,14 @@ async function copyText(text) {
 
   return copied;
 }
+
+profileButtons.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-profile]");
+  if (!button) return;
+  state.profile = button.dataset.profile;
+  renderProfileButtons();
+  renderSession(createSession());
+});
 
 dayButtons.addEventListener("click", (event) => {
   const button = event.target.closest("[data-day]");
@@ -438,6 +580,8 @@ savedList.addEventListener("click", (event) => {
   if (!session) return;
   state.day = session.dayKey;
   state.option = session.optionKey;
+  state.profile = session.profileKey || "together";
+  renderProfileButtons();
   renderDayButtons();
   renderOptionButtons();
   renderSession(session);
@@ -449,6 +593,7 @@ clearSavedButton.addEventListener("click", () => {
   renderSaved();
 });
 
+renderProfileButtons();
 renderDayButtons();
 renderOptionButtons();
 renderSession(createSession());

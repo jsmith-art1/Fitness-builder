@@ -179,13 +179,15 @@ h2 {
   gap: 8px;
 }
 
-.option-row {
+.option-row,
+.profile-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
 .day-button,
+.profile-button,
 .option-button,
 .quiet-button,
 .primary-button,
@@ -200,6 +202,7 @@ h2 {
 }
 
 .day-button,
+.profile-button,
 .option-button {
   display: grid;
   gap: 3px;
@@ -207,17 +210,20 @@ h2 {
   text-align: left;
 }
 
+.profile-button,
 .option-button {
   justify-items: center;
   text-align: center;
 }
 
 .day-button strong,
+.profile-button strong,
 .option-button strong {
   font-size: 0.96rem;
 }
 
 .day-button span,
+.profile-button span,
 .option-button span {
   color: var(--muted);
   font-size: 0.77rem;
@@ -225,6 +231,7 @@ h2 {
 }
 
 .day-button[aria-checked="true"],
+.profile-button[aria-checked="true"],
 .option-button[aria-checked="true"] {
   border-color: var(--teal);
   background: #e8f4f2;
@@ -255,6 +262,7 @@ h2 {
 }
 
 .day-button:hover,
+.profile-button:hover,
 .option-button:hover,
 .quiet-button:hover,
 .icon-button:hover,
@@ -449,6 +457,10 @@ h2 {
   }
 
   .option-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-row {
     grid-template-columns: 1fr;
   }
 }
