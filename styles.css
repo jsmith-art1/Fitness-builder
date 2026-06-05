@@ -83,6 +83,15 @@ button {
   gap: 14px;
 }
 
+.brand-row {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.brand-row .quiet-button {
+  justify-self: start;
+}
+
 .eyebrow,
 .section-label {
   margin: 0 0 6px;
